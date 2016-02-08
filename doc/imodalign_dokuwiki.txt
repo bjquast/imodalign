@@ -1,0 +1,100 @@
+ ====== Image registration with imodalign ======
+
+This software is only a small User Interface for the image alignment programs of the great [[http://bio3d.colorado.edu/imod/|IMOD]] package. Thanks to David Mastronade, Rick Gaudette, Sue Held, Jim Kremer, Quanren Xiong, and John Heumann as well as the funding institutions for making IMOD available.[[http://bio3d.colorado.edu/imod/COPYRIGHT.txt|IMOD copyright notice]].
+
+==== Installation ====
+
+Windows:
+  - Download and install [[http://bio3d.colorado.edu/imod/download.html|IMOD]]. Install it with python and psutil as described on the IMOD-Download page.
+  - After Python / IMOD installation download and install [[http://www.imagemagick.org/script/binary-releases.php|imagemagick]], [[http://strawberryperl.com/|strawberry perl]].
+  - Install the perl modules: **Image::ExifTool** and **Tk** by using the **CPAN Client** that comes with Strawberry perl. Enter ''install ExifTool'', into the CPAN Client command line, wait until installation is finished, enter ''install Tk'', wait and enjoy the widget test during Tk installation. 
+  - Reboot computer.
+  - Download imodalign script from [[http://www.evolution.uni-bonn.de/mitarbeiter/bquast/software]].
+  - Put script in the same folder as data or at least on the same disk drive. Run imodalign script.
+
+Linux:
+  - Install Perl with modules Image::Exif-tool, Tk with package manager (or from source).
+  - Install ImageMagick.
+  - Download and install [[http://bio3d.colorado.edu/imod/download.html|IMOD]].
+  - Download imodalign script from [[http://www.evolution.uni-bonn.de/mitarbeiter/bquast/software]].
+  - Make imodalign script executable and run from command line.
+
+==== Usage ====
+
+{{ :imageprocessing:imodalign1.png?200|}}
+The steps needed for an alignment or image registration can be achieved by following imodaligns graphical user interface sections from left to right and from top to bottom within each section.
+
+=== First section: load data ===
+
+
+In the file dialog all image files must be selected used for registration must be selected. When the images are loaded the indicator field under the **open *.tif files button** changes to green. If the images are to small for subsequent steps or parts of an image are cut off the downscaling factor or width and height can be adjusted manually. All images must than be reloaded by using the **reload images with given size** button. (In most cases such problems become obious after an initial alignment is done and the midas program is started in the second section, see below). 
+
+=== Second section: ===
+== Auto-alignment ==
+
+After the files are loaded and the first alignment step can be started in the second section. Before pressing the **start alignment button** the **parameters must be set**: coarse prealignment tries to find correlations between arbitrarily rotated sections and to register them in the same orientation. It can be switched of when the sections are merely in the same orientation. The **free alignment parameters slider** sets the possible transformations that can be calculated. **Displacement** (translation) and **rotation** are the default, allowing more free parameters (i.e. **magnification** and **distortion**) increase the calculation time and often results in more misalignments due to local optima. On the other hand it can enhance the quality of alignment if some sections are slightly stretched or distorted. The **skip image borders slider** gives a value by which the images are cropped on each side before the alignment is calculated. This may prevents that image borders inserted when smaller images are extended to the size of larger ones influence the calculation of the alignment. It may also helps to use central image structures for the alignment when images are largely distorted.
+{{ :imageprocessing:imodalign2.png?250}}
+The results of the alignment can be reviewed by pressing **compute preview** in the fourth section. After the first alignment this preview is always available and shores the current state of the alignment process. In Windows operation systems the preview program blocks the other steps and thus must be closed before the next steps are available.
+
+== Refinement with midas ==
+
+The prealignment can be refined with pressing the **start midas button**. The [[http://bio3d.colorado.edu/imod/doc/man/midas.html#TOP|midas]] program overlays two sections of the stack, which can be aligned to each other. By moving through these pairs of images the whole stack is aligned step by step, regardless of the orientation of the currently shown pair. 
+
+Important keys are:
+  * a - switch to next section pair
+  * b - switch to previous pair of sections 
+  * s - save (do it often to save intermediate states)
+
+Mouse control:
+  * left mouse button - translate section
+  * middle mouse button (wheel pressed) - rotate section
+  * shift + right mouse button - magnify section
+  * control + middle mouse button - set new rotation center
+
+Do not use the right mouse button unless you know what you are doing. This stretches the image and is difficult to reset. If excidently used it may be reset by going into the Menu and pressing **Revert to stored transform**, but this will reset the alignment to the version that was stored when the s-key was pressed.
+
+Images can be mirrored by using the **Menu Edit Mirror around X axis button**. When sections occur that are not flipped the mirroring must be redone in the respective pair of sections. When all sections are aligned, press s to save the results and close midas.
+
+Tricks in midas:
+
+  * When sections are folded set the center with control + middle mouse button to a region that is flat in this and the following sections and press the cross correlate button tos align the section to this area only. using the same unfolded area prevents the alignment from drift that occurs when different regions are aligned to each other over the sequence of images. 
+
+=== Third section: second alignment ===
+{{ :imageprocessing:imodalign3.png?250|}}
+This second alignment can be used when a large number of section needs to be aligned and one does not want to do the refinement in midas as accurate as possible. The chance is god, that sections aligned in the first alignment steps are aligned with higher accuracy in this step, because the program does not run into local optima. On the other hand, problematic distorted or folded sections may fail to become aligned at all. Accordingly, the second alignment may destroy a god former alignment instead of refining it. The result of the first alignment can easily be restored by opening midas in the second section and closing it, with or without saving. 
+The alignment steps in this third section are the same as in the second sections with two exceptions: A coarse prealignment is not available and there are some options to filter the images before calculating the alignment.
+Unfortunately, the I did not understand the filter options in the [[http://bio3d.colorado.edu/imod/doc/man/xfalign.html|original xfalign program]], thus the available values are most probably wrong. Give it a try or mail me if you can explain the right range of values that should be available for the parameters.
+
+As in the second section the auto-alignment can and should be refined with midas.
+
+=== Fourth section: compute aligned stack ===
+{{ :imageprocessing:imodalign4.png?150|}}
+In this section the parameters can be set how the pairwise alignment is computed to a stack alignment and how the edges should be filled for rotated images or translated images. As in the former sections the results of the parameter settings can be previewed by using the **compute preview button**. 
+The following options are available for computation of the stack alignment:
+  * **N1 linear**: All sections are aligned to their partner sections and general trends over the complete stack are included into the calculation. This option prevents artificial shifts, rotations or magnifications caused by large highly contrasted structures that outbalance other structures on the alignment. Trends found in the overall alignment of the stack are substracted. With the **prevent trend assignment slider** such a trend substraction can be prevented for selected trends. No reference image for the stack alignment can be choosen in this mode.
+  * **global**: In the global mode all sections are aligned to their previous section only. This mode does not calculate any trend in the alignment. One section can be choosen as reference section by selecting the **align to reference slice button** and choosing one section with the **choose reference slice slider**. The choosen reference section should be one where the image content is centered and has a high expansion, to ensure that the other images aligned to it do not drift out of the image area. Since no trends are calculated the **prevent trend assignment slider** is not available.
+  * **default**: In the default mode trends in the transformation are calculated over 7 adjacent sections. It is possible to either prevent trend calculation for choosen parameters with the **prevent trend assignment slider** or to choose a reference slice with the **align to reference slice button** and the **choose reference slice slider**. Both can not be used together.
+
+The **fill border black / white slider** allows to choose a gray scale value that fits to the borders of the aligned images. Thus areas that are empty due to the rotation or translation of an image will be filled with the given gray value. In the preview most rotated images will get a small gray frame between the image and the fill color.This frame does not occur in the calculated images.
+
+
+There are two possibilities to use the calculated transformations: 
+  - All images are processed and trasnformed according to the calculated transformation list. The images are copied and the processed images are written in the same folder with the prefix imodal_. This image processing is started with the **start apply button** and an unchecked **write transformation list only checkbox**.
+  - The images are not processed but a transformation list is written with the name imod_transformations.txt. The transformation list is written when the **write transformation list only checkbox** is checked and the start apply button is pressed. When only a trasnformation list is written it can be used (and only be used) for applying the transformations to the images after [[imageprocessing:trakem2projekt|loading them into a Trakem2 project]]. The affinehash3.py script prvoided with imodalign does this job.
+
+After all calculations are done the imodalign_tmp directory can be removed from the data directory. But if a alignment should be reused for the same images currently the only way is to copy the temp1.xf and temp2.xf files (the second if the second auto-alignment was done) and re-inserting them into the imodalign_tmp folder after the first alignment (temp1.xf) or the second alignment (temp2.xf) was done. This inconvenience in reusing calculated alignments is a known bug.
+
+=== Bugs ===
+
+  * Sections can not be inserted or removed from stack
+  * filter parameters are not reasonable
+  * stack alignment calculation does not provide all options
+  * warp features of IMOD and MIDAS are not supported
+
+=== See also ===
+
+David Mastronade has developed a similar user interface for [[http://bio3d.colorado.edu/imod/doc/serialalign.html|serial section alignment]]. It is part of the [[http://bio3d.colorado.edu/imod/doc/etomoTutorial.html#TOP|eTomo program]] and supports warping and all features of the IMOD alignment programs. Unfortunately it lacks a downscaling of the data before putting them into the mrc stack and thus is remarkably slower than imodalign that works on downscaled data, maybe for the price of lower accuracy.    
+
+
+
+
